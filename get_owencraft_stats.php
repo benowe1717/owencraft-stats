@@ -7,14 +7,18 @@
     $prom = new ocprom("/var/prometheus/", "owencraft_stats.prom", "/tmp/prometheus/", "owencraft_stats-tmp.prom");
 
     require_once "owencraft_stats.class.php";
-    $oc = new ocstats("/minecraft/Owencraft/stats/");
+    $oc = new ocstats("/minecraft/Owencraft/stats/", "/minecraft/whitelist.json");
 
     $logger->startScript();
 
     foreach($oc->files as $file) {
-        $msg = "Working on $file...";
-        $logger->logMsg($msg, 0);
+
+        $logger->logMsg("Working on $file...", 0);
+        $oc->getStats($file);
+
     }
+
+    var_dump($oc);
 
     $logger->stopScript();
 
