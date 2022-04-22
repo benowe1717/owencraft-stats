@@ -10,9 +10,9 @@
         function __construct(string $store_path, string $store_file, string $tmp_path, string $tmp_file) {
 
             $this->store_path = $store_path;
-            $this->store_file = rtrim($this->store_path) . "/" . $store_file;
+            $this->store_file = rtrim($this->store_path, "/") . "/" . $store_file;
             $this->tmp_path = $tmp_path;
-            $this->tmp_file = rtrim($this->tmp_path) . "/" . $tmp_file;
+            $this->tmp_file = rtrim($this->tmp_path, "/") . "/" . $tmp_file;
 
             try {
 

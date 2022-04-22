@@ -2,9 +2,11 @@
 
     class oclogger {
 
+        public $path = "";
+        public $file = "";
         private $date = "";
         private $pid = "";
-        private $lvl = array();
+        public $lvl = array();
 
         function __construct(string $path, string $file) {
 
@@ -35,27 +37,67 @@
             $this->date = date("M j G:i:s");
             $this->pid = getmypid();
             $content = $this->date . " php[" . $this->pid . "] [" . $this->lvl[$lvl] . "] " . $msg . "\n";
-            file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+            try {
+
+                file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+
+            } catch(Exception $e) {
+
+                exit($e);
+
+            }
 
         }
 
         public function startScript() {
 
             $content = "START OF SCRIPT - " . date("r") . "\n";
-            file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+            try {
+
+                file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+
+            } catch(Exception $e) {
+
+                exit($e);
+
+            }
 
             $content = "-----------------------------------------------------------------------------------------------------\n";
-            file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+            try {
+
+                file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+
+            } catch(Exception $e) {
+
+                exit($e);
+
+            }
 
         }
 
         public function stopScript() {
             
             $content = "-----------------------------------------------------------------------------------------------------\n";
-            file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+            try {
+
+                file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+
+            } catch(Exception $e) {
+
+                exit($e);
+
+            }
 
             $content = "END OF SCRIPT - " . date("r") . "\n";
-            file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+            try {
+
+                file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
+
+            } catch(Exception $e) {
+
+                exit($e);
+
+            }
 
         }
 
