@@ -43,20 +43,29 @@
             foreach($arr as $player) {
                 $uuid = $player["uuid"];
                 $name = $player["name"];
-                $this->players[$uuid] = $name;
+                $this->players[$uuid]["name"] = $name;
             }
 
         }
 
         public function getStats(string $file) {
 
-            $player = end(explode($file, "/"));
+            $tmp = explode("/", $file);
+            $filename = end($tmp);
+            $tmp = explode(".", $filename);
+            $player = $tmp[0];
+
             $json = file_get_contents($file);
-            $arr = json_decode($json, true);
-            foreach($arr["stats"] as $key => $value) {
+            $stats = json_decode($json, true);
+
+            foreach($stats["stats"] as $key => $value) {
 
                 if(in_array($key, $this->objectives)) {
-                    $this->players[$player][$key] = $value;
+                    foreach($value as $category => $stat) {
+
+                        $this->players[$player][$key][$category] = $stat;
+
+                    }
                 }
 
             }

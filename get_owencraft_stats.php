@@ -18,7 +18,38 @@
 
     }
 
-    var_dump($oc);
+    foreach($oc->objectives as $objective) {
+
+        $tmp = explode(":", $objective);
+        $obj = "owencraft_" . $tmp[1] . "_counts gauge\n";
+        file_put_contents($prom->tmp_file, $obj, FILE_APPEND | LOCK_EX);
+
+        foreach($oc->players as $player) {
+
+            $msg = "Iterating $objective stats for " . $player["name"] . "...";
+            $logger->logMsg($msg, 0);
+
+            if(isset($player[$objective])) {
+                foreach($player[$objective] as $key => $value) {
+
+                    $contents = "owencraft_" . $obj . "_counts{objective=" . $key . ",player=" . $player["name"] . "} " . $value . "\n";
+                    file_put_contents($prom->tmp_file, $contents, FILE_APPEND | LOCK_EX);
+
+                }
+            }
+
+        }
+
+    }
+
+    foreach($oc->players as $player) {
+
+        $msg = "Iterating stats for " . $player["name"];
+        $logger->logMsg($msg, 0);
+
+
+
+    }
 
     $logger->stopScript();
 
