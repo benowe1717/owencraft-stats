@@ -32,7 +32,7 @@
             if(isset($player[$objective])) {
                 foreach($player[$objective] as $key => $value) {
 
-                    $contents = "owencraft_" . $tmp[1] . "_counts{objective=" . $key . ",player=" . $player["name"] . "} " . $value . "\n";
+                    $contents = "owencraft_" . $tmp[1] . "_counts{objective=\"" . $key . "\",player=\"" . $player["name"] . "\"} " . $value . "\n";
                     file_put_contents($prom->tmp_file, $contents, FILE_APPEND | LOCK_EX);
 
                 }
