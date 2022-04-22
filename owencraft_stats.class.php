@@ -9,7 +9,7 @@
         function __construct(string $stats_path) {
 
             $this->objectives = array("minecraft:crafted", "minecraft:mined", "minecraft:custom", "minecraft:dropped", "minecraft:used", "minecraft:broken", "minecraft:killed_by", "minecraft:picked_up", "minecraft:killed");
-            $this->stats_path = rtrim($stats_path) . "/";
+            $this->stats_path = rtrim($stats_path, "/") . "/";
 
             self::buildFileList();
 
