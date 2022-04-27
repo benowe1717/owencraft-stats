@@ -51,6 +51,10 @@ get_pid() {
     ${CAT} $PIDFILE
 }
 
+check_pid() {
+    ${PS} -ef | ${GREP} "$1" | ${HEAD} -n1 | ${WC} -l
+}
+
 strip_escape_chars() {
     # This is here because, I found, that when passing in names to MCRCON,
     # there were special characters at the end of the string messing with the command.
@@ -83,11 +87,14 @@ parse_users() {
     DATA=($(${ECHO} "$1" | ${ACK} "^.*online\:\s+(.*?$)" --output '$1'))
     [ ! -z "$DEBUG" ] && log "DEBUG" "Found ${#DATA[@]} users logged in: ${DATA[*]}"
     for i in ${!DATA[@]}; do
-        [ ! -z "$DEBUG" ] && log "DEBUG" "Kicking user: ${DATA[i]}..."
-        RESULT=$(kick_users "${DATA[i]}")
+        # If there are multiple users, the user list will be separated by commas, so we just
+        # strip the commas if they exist as they're not part of the actual username
+        USER=$(${ECHO} ${DATA[i]} | ${SED} 's/\,//g')
+        [ ! -z "$DEBUG" ] && log "DEBUG" "Kicking user: $USER..."
+        RESULT=$(kick_users "$USER")
         [ ! -z "$DEBUG" ] && log "DEBUG" "$RESULT"
         if [[ ! "$RESULT" =~ .*"Kicked by an operator" ]]; then
-            log "ERROR" "Unable to kick player ${DATA[i]} through MCRCON! Consider enabling DEBUG logging..."
+            log "ERROR" "Unable to kick player $USER through MCRCON! Consider enabling DEBUG logging..."
             # Uncomment this if you want the server to stop online when everyone has been manually kicked
             # I choose not to do this here b/c the server stopping will kick everyone anyways, this is just a niceity
             # If you find it is causing problems with users, then exiting here is important
@@ -111,6 +118,15 @@ get_users() {
         log "INFO" "Found players online! Logging out all users!"
         parse_users "$USERS"
     fi
+}
+
+post_discord() {
+    RESULT=$(${CURL} -s -XPOST -H "Content-Type: application/json" -d "{\"content\":\"$1\"}" $WEBHOOK 2>&1)
+    ${ECHO} "$RESULT"
+}
+
+set_minecraft_status() {
+    ${SYSTEMCTL} "$1" "$PROG" || { log "ERROR" "Unable to $1 the Owencraft Minecraft Server! Cannot continue!"; exit 1008; }
 }
 
 begin() {
@@ -158,11 +174,27 @@ main() {
 
     ### BEGIN ONLINE PLAYER CHECK ###
     log "INFO" "Checking for any online players..."
-    get_users
+    # get_users
     log "INFO" "Online player check complete!"
     ### END ONLINE PLAYER CHECK ###
 
+    ### BEGIN SERVER SHUTDOWN ###
+    log "INFO" "Stopping the Owencraft Minecraft server..."
+    [ ! -z "$DEBUG" ] && log "DEBUG" "Posting message to Discord channel..."
+    [ ! -z "$DEBUG" ] && log "DEBUG" "The Owencraft Server is now offline! Category: Maintenance Reason: Daily Backup"
+    RESULT=$(post_discord "The Owencraft Server is now offline! Category: Maintenance Reason: Daily Backup")
+    [ ! -z "$DEBUG" ] && log "$RESULT"
+    [ ! -z "$RESULT" ] && { log "ERROR" "Unable to post message to the Discord channel! Consider enabling DEBUG logging..."; exit 1007; }
+    PID=$(get_pid)
+    set_minecraft_status "stop"
+    sleep 30 # give the server plenty of time to shutdown, you may want to adjust this
+    log "INFO" "Owencraft Minecraft server stopped successfully!"
+    ### END SERVER SHUTDOWN ###
+
+    ### BEGIN RUN BACKUP ###
+    log "INFO" "Running backup with the N-Able Backup Manager Client Tool..."
     log "INFO" "Backup complete!"
+    ### END RUN BACKUP ###
 }
 ### END FUNCTIONS ###
 
