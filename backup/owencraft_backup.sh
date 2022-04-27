@@ -67,7 +67,7 @@ strip_escape_chars() {
 
 send_msg() {
     RESULT=$(${MCRCON} -H "$HOSTNAME" -p "$PASSWORD" "say $1")
-    [ ! -z "$DEBUG" ] && log "DEBUG" "$RESULT"
+    [ ! -z "$DEBUG" ] && log "DEBUG" "Result of posting the message via MCRCON: $RESULT"
     [ ! -z "$RESULT" ] && { log "ERROR" "Unable to send message to the server through MCRCON! Consider enabling DEBUG logging..."; exit 1004; }
 }
 
@@ -92,7 +92,7 @@ parse_users() {
         USER=$(${ECHO} ${DATA[i]} | ${SED} 's/\,//g')
         [ ! -z "$DEBUG" ] && log "DEBUG" "Kicking user: $USER..."
         RESULT=$(kick_users "$USER")
-        [ ! -z "$DEBUG" ] && log "DEBUG" "$RESULT"
+        [ ! -z "$DEBUG" ] && log "DEBUG" "Result of kicking the user: $RESULT"
         if [[ ! "$RESULT" =~ .*"Kicked by an operator" ]]; then
             log "ERROR" "Unable to kick player $USER through MCRCON! Consider enabling DEBUG logging..."
             # Uncomment this if you want the server to stop online when everyone has been manually kicked
@@ -126,7 +126,27 @@ post_discord() {
 }
 
 set_minecraft_status() {
+    [ ! -z "$DEBUG" ] && log "DEBUG" "$SYSTEMCTL $1 $PROG is now being executed..."
     ${SYSTEMCTL} "$1" "$PROG" || { log "ERROR" "Unable to $1 the Owencraft Minecraft Server! Cannot continue!"; exit 1008; }
+}
+
+run_backup() {
+    RESULT=$(${BKP} control.backup.start)
+    ${ECHO} "$RESULT"
+}
+
+backup_status() {
+    RESULT=$(${BKP} control.session.list | ${GREP} "Backup" | ${HEAD} -n1 | ${AWK} '{ print $3 }')
+    ${ECHO} "$RESULT"
+}
+
+backup_report() {
+    RESULT=$(${BKP} control.session.list | ${GREP} "Backup" | ${HEAD} -n1)
+    STATE=$(${ECHO} "$RESULT" | ${AWK} '{ print $3 }')
+    PROCS=$(${ECHO} "$RESULT" | ${AWK} '{ print $11 }')
+    PROCC=$(${ECHO} "$RESULT" | ${AWK} '{ print $12 }')
+    ERRC=$(${ECHO} "$RESULT" | ${AWK} '{ print $14 }')
+    log "INFO" "Backup complete with status: $STATE after processing $PROCS in size and $PROCC files with $ERRC error(s)!"
 }
 
 begin() {
@@ -183,21 +203,61 @@ main() {
     [ ! -z "$DEBUG" ] && log "DEBUG" "Posting message to Discord channel..."
     [ ! -z "$DEBUG" ] && log "DEBUG" "The Owencraft Server is now offline! Category: Maintenance Reason: Daily Backup"
     RESULT=$(post_discord "The Owencraft Server is now offline! Category: Maintenance Reason: Daily Backup")
-    [ ! -z "$DEBUG" ] && log "$RESULT"
+    [ ! -z "$DEBUG" ] && log "DEBUG" "Result of post to Discord channel: $RESULT"
     [ ! -z "$RESULT" ] && { log "ERROR" "Unable to post message to the Discord channel! Consider enabling DEBUG logging..."; exit 1007; }
-    PID=$(get_pid)
     set_minecraft_status "stop"
+    [ ! -z "$DEBUG" ] && log "DEBUG" "Sleeping for 30 seconds starting now..."
     sleep 30 # give the server plenty of time to shutdown, you may want to adjust this
     log "INFO" "Owencraft Minecraft server stopped successfully!"
     ### END SERVER SHUTDOWN ###
 
     ### BEGIN RUN BACKUP ###
     log "INFO" "Running backup with the N-Able Backup Manager Client Tool..."
+    RESULT=$(run_backup)
+    [ ! -z "$DEBUG" ] && log "DEBUG" "Result of run_backup function: $RESULT"
+    if [[ ! "$RESULT" =~ .*"Starting backup for" ]]; then
+        log "ERROR" "Unable to start backup with N-Able Backup Manager Client Tool! Consider enabling DEBUG logging..."
+        exit 1009
+    fi
+    [ ! -z "$DEBUG" ] && log "DEBUG" "Sleeping for 5 seconds starting now..."
+    sleep 5 # give the ClientTool time to change it's status away from Idle, there's a weird delay here
+    STATUS="InProgress"
+    while [ "$STATUS" != "Completed" ]; do
+        log "INFO" "Backup is currently running..."
+        STATUS=$(backup_status)
+        [ ! -z "$DEBUG" ] && log "DEBUG" "Status is: $STATUS"
+    done
     log "INFO" "Backup complete!"
     ### END RUN BACKUP ###
+
+    ### BEGIN SERVER STARTUP ###
+    log "INFO" "Starting the Owencraft Minecraft server..."
+    set_minecraft_status "start"
+    [ ! -z "$DEBUG" ] && log "DEBUG" "Sleeping for 30 seconds starting now..."
+    sleep 30 # give the server plenty of time to start up, you may want to adjust this
+    PID=$(get_pid)
+    [ ! -z "$DEBUG" ] && log "DEBUG" "PID is: $PID"
+    RESULT=$(check_pid "$PID")
+    [ ! -z "$DEBUG" ] && log "DEBUG" "Result of check_pid function: $RESULT"
+    if [[ "$RESULT" = "1" ]]; then
+        log "INFO" "Owencraft Minecraft server started successfully!"
+        [ ! -z "$DEBUG" ] && log "DEBUG" "Posting message to Discord channel..."
+        [ ! -z "$DEBUG" ] && log "DEBUG" "The Owencraft Server is now online!"
+        RESULT=$(post_discord "The Owencraft Server is now online!")
+        [ ! -z "$DEBUG" ] && log "DEBUG" "Result of post to Discord channel: $RESULT"
+        [ ! -z "$RESULT" ] && { log "ERROR" "Unable to post message to the Discord channel! Consider enabling DEBUG logging..."; exit 1007; }
+    fi
+    ### END SERVER STARTUP ###
+}
+
+end() {
+    log "INFO" "Compiling Backup statistics..."
+    backup_report
+    log "INFO" "End script..."
 }
 ### END FUNCTIONS ###
 
 ### MAIN ###
 begin
 main
+end
