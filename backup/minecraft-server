@@ -1,0 +1,66 @@
+#! /bin/sh
+
+
+### BEGIN INIT INFO
+# Provides:          minecraft-server
+# Required-Start:    $local_fs $remote_fs $syslog $named $network $time
+# Required-Stop:     $local_fs $remote_fs $syslog $named $network
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/Stop the Owencraft Minecraft Server
+### END INIT INFO
+
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/minecraft/start.sh
+NAME=minecraft-server
+DESC=minecraft-server
+PIDFILE=/minecraft/minecraft-server.pid
+
+if ! [ -x "/lib/lsb/init-functions" ]; then
+  . /lib/lsb/init-functions
+else
+  echo "E: /lib/lsb/init-functions not found, lsb-base (>= 3.0-6) needed"
+  exit 1
+fi
+
+
+
+test -x $DAEMON || exit 0
+
+
+start_daemon() {
+  /usr/bin/nohup $DAEMON > /dev/null 2>&1 & /bin/echo $! > $PIDFILE
+}
+
+stop_daemon() {
+  /usr/local/bin/mcrcon -H localhost -p `cat /root/.mcrcon` "stop"
+  /bin/rm $PIDFILE
+}
+
+
+set -e
+
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting the Owencraft Minecraft Server" "java" || true
+    start_daemon
+    ;;
+  stop)
+    log_daemon_msg "Stopping the Owencraft Minecraft Server" "java" || true
+    stop_daemon
+    ;;
+  status)
+    status_of_proc -p $PIDFILE /usr/bin/java java && exit 0 || exit $?
+    ;;
+  *)
+    log_action_msg "Usage: /etc/init.d/minecraft-server {start|stop|status}" || true
+    exit 1
+    ;;
+esac
+
+
+exit 0
