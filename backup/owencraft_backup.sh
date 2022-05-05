@@ -181,20 +181,20 @@ main() {
     ### BEGIN PLAYER WARNING ###
     [ ! -z "$DEBUG" ] && log "DEBUG" "Sending 5 minute warning message to server..."
     send_msg "Backup will start in 5 minutes! Please log out in a safe place or you will be forcibly kicked..."
-    # sleep 180
+    sleep 180
 
     [ ! -z "$DEBUG" ] && log "DEBUG" "Sending 2 minute warning message to server..."
     send_msg "Backup will start in 2 minutes! Please log out in a safe place or you will be forcibly kicked..."
-    # sleep 60
+    sleep 60
 
     [ ! -z "$DEBUG" ] && log "DEBUG" "Sending 1 minute warning message to server..."
     send_msg "Backup will start in 1 minute! Please log out in a safe place or you will be forcibly kicked..."
-    # sleep 60
+    sleep 60
     ### END PLAYER WARNING ###
 
     ### BEGIN ONLINE PLAYER CHECK ###
     log "INFO" "Checking for any online players..."
-    # get_users
+    get_users
     log "INFO" "Online player check complete!"
     ### END ONLINE PLAYER CHECK ###
 
