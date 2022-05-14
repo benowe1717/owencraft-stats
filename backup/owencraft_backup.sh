@@ -26,11 +26,6 @@ BINARIES=($ACK $AWK $CAT $CURL $HEAD $GREP $PS $SED $SYSTEMCTL $WC $BKP)
 ### END VAR SETUP ###
 
 ### BEGIN FUNCTIONS ###
-# log() {
-#     [ -f "$DATE" ] && time=`${DATE}` || { log "ERROR" "Cannot find $DATE! Cannot continue!"; exit 1001; }
-#     [ -f "$HOST" ] && name=`${HOST}` || { log "ERROR" "Cannot find $HOST! Cannot continue!"; exit 1001; }
-#     [ -f "$ECHO" ] && ${ECHO} "$time $name [$1] $2"
-# }
 log() {
     time=`${DATE}` || return 1
     name=`${HOST}` || return 1
