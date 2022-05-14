@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ### Uncomment the DEBUG line to get debug logs ###
-DEBUG="TRUE"
+#DEBUG="TRUE"
 REQUIRED_FILE="$1"
 
 ### BEGIN VAR SETUP ###
@@ -245,6 +245,7 @@ main() {
         log "INFO" "Backup is currently running..."
         STATUS=$(backup_status)
         log "DEBUG" "Status is: $STATUS"
+        sleep 1 # no need to spam this check, just do it once every 1 second
     done
     log "INFO" "Backup complete!"
     ### END RUN BACKUP ###
