@@ -91,6 +91,17 @@
     $contents = "owencraft_misc_counts{objective=\"logged_in_players\"} " . $player_count . "\n";
     file_put_contents($prom->tmp_file, $contents, FILE_APPEND | LOCK_EX);
 
+    $msg = "Grabbing names of any logged in players...";
+    $logger->logMsg($msg, 0);
+    foreach($oc->players as $player) {
+        if(in_array($player["name"], $logged_in_players)) {
+            $contents = "owencraft_misc_counts{objective=\"player_logged_in\",player=\"" . $player["name"] . "\"} 1\n";
+        } else {
+            $contents = "owencraft_misc_counts{objective=\"player_logged_in\",player=\"" . $player["name"] . "\"} 0\n";
+        }
+        file_put_contents($prom->tmp_file, $contents, FILE_APPEND | LOCK_EX);
+    }
+    
     $msg = "Moving " . $prom->tmp_file . " to " . $prom->store_file . "...";
     $logger->logMsg($msg, 0);
 
