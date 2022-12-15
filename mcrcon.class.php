@@ -35,6 +35,7 @@
 
         private function getPlayers(string $players) {
 
+            $loggedIn = array();
             if(preg_match("/^.*?online\:\s+(.*)$/", $players, $matches)) {
                 unset($matches[0]); // this is set to remove the entire string
                 foreach($matches as $match) {
@@ -46,11 +47,9 @@
                         $loggedIn[] = $match; // update the array with the logged in user
                     }
                 }
-            } else {
-                $matches = array();
             }
 
-            return $matches;
+            return $loggedIn;
 
         }
 
