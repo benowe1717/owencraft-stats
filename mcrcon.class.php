@@ -36,7 +36,16 @@
         private function getPlayers(string $players) {
 
             if(preg_match("/^.*?online\:\s+(.*)$/", $players, $matches)) {
-                unset($matches[0]);
+                unset($matches[0]); // this is set to remove the entire string
+                foreach($matches as $match) {
+                    // the string in the $match variable may appear to be empty
+                    // but it is only visually empty and is actually 4 bytes in length
+                    // according to the strlen() function. so doing an empty(), is_null(),
+                    // or $match !== "" will not work here
+                    if(strlen($match) > 4) {
+                        $loggedIn[] = $match; // update the array with the logged in user
+                    }
+                }
             } else {
                 $matches = array();
             }
