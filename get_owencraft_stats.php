@@ -86,7 +86,8 @@
 
     $msg = "Grabbing count of logged in players...";
     $logger->logMsg($msg, 0);
-    $player_count = count(getLoggedInPlayers());
+    $logged_in_players = getLoggedInPlayers(); // this gets the full array, meaning keys and values
+    $player_count = count($logged_in_players); // count number of keys to get the player count
     $contents = "owencraft_misc_counts{objective=\"logged_in_players\"} " . $player_count . "\n";
     file_put_contents($prom->tmp_file, $contents, FILE_APPEND | LOCK_EX);
 
