@@ -17,6 +17,8 @@
     require_once "owencraft_stats.class.php";
     $oc = new ocstats($stats_path, $whitelist_file);
 
+    require_once "mcrcon.class.php";
+
     function getMinecraftServerVersion(string $server_jar) {
 
         // this should return something like 1.19 or 1.17.1
@@ -31,6 +33,13 @@
         } else {
             return 0.00;
         }
+
+    }
+
+    function getLoggedInPlayers() {
+
+        $mcrcon = new mcrcon();
+        return $mcrcon->listPlayers();
 
     }
 
@@ -73,6 +82,12 @@
     $obj = "# TYPE owencraft_misc_counts gauge\n";
     file_put_contents($prom->tmp_file, $obj, FILE_APPEND | LOCK_EX);
     $contents = "owencraft_misc_counts{objective=\"server_version\"} " . $server_version . "\n";
+    file_put_contents($prom->tmp_file, $contents, FILE_APPEND | LOCK_EX);
+
+    $msg = "Grabbing count of logged in players...";
+    $logger->logMsg($msg, 0);
+    $player_count = count(getLoggedInPlayers());
+    $contents = "owencraft_misc_counts{objective=\"logged_in_players\"} " . $player_count . "\n";
     file_put_contents($prom->tmp_file, $contents, FILE_APPEND | LOCK_EX);
 
     $msg = "Moving " . $prom->tmp_file . " to " . $prom->store_file . "...";
