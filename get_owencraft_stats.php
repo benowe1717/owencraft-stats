@@ -79,9 +79,11 @@
     $msg = "Grabbing server version...";
     $logger->logMsg($msg, 0);
     $server_version = getMinecraftServerVersion($server_jar);
+    $msg = "Got server version: {$server_version}!";
+    $logger->logMsg($msg, 0);
     $obj = "# TYPE owencraft_misc_counts gauge\n";
     file_put_contents($prom->tmp_file, $obj, FILE_APPEND | LOCK_EX);
-    $contents = "owencraft_misc_counts{objective=\"server_version\"} " . $server_version . "\n";
+    $contents = "owencraft_misc_counts{objective=\"server_version\", version=\"{$server_version}\"} 1\n";
     file_put_contents($prom->tmp_file, $contents, FILE_APPEND | LOCK_EX);
 
     $msg = "Grabbing count of logged in players...";
