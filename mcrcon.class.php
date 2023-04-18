@@ -84,6 +84,26 @@
 
         }
 
+        public function setWeather(string $weather) {
+            if($weather === "clear") {
+                $cmd = "{$this->path} -H {$this->hostname} -p {$this->password} weather clear 3600";
+            } elseif($weather === "rain") {
+                $cmd = "{$this->path} -H {$this->hostname} -p {$this->password} weather rain 3600";
+            } else {
+                $this->logger->logMsg("Unable to determine weather type to set!", 2);
+                return FALSE;
+            }
+            $exec = exec($cmd, $output, $return);
+            if($return === 0) {
+                $this->logger->logMsg("Successfully set the weather!", 0);
+                return TRUE;
+            } else {
+                $this->logger->logMsg("Unable to set the weather!", 2);
+                $this->logger->logMsg("Error Code: {$return} :: Output: {$output} :: Command: {$cmd}", 3);
+                return FALSE;
+            }
+        }
+
     }
 
 ?>
